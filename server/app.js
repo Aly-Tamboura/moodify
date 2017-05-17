@@ -90,6 +90,7 @@ app.get('/auth/spotify/callback',
     res.redirect('/');
   });
 
+
 app.get('/recentlyplayed', (req, res) => {
   let url = `https://api.spotify.com/v1/me/player/recently-played`
   
@@ -177,6 +178,7 @@ app.get('/logout', (req, res) => {
           songs: data.body.albums.items,
           dateadded: Date.now()
         };
+
       const newTopTenEntry = new db.TopTenSongs(topTenData);
       newTopTenEntry.save(err => {
         if (err) {console.log('Error saving TopTenSong data')}
@@ -197,6 +199,13 @@ app.post('/books', (req,res) => {
   .catch(error => {res.send(error);});
 });
 
+
+
+app.post('/sendlyrics', (req, res) => {
+  console.log('called')
+  console.log(req.body);
+  res.send('hello')
+})
 
 app.post('/search', (req, res) => {
   console.log('fucking aly exceeded the limit!');
@@ -317,7 +326,7 @@ app.post('/process', (req, res) => {
   })
   .then((spotifyData) => {
     input.spotify_uri = spotifyData
-    
+
     let songEntry = new db.Song(input);
     songEntry.save(err => {
       if (err) { console.log("SAVE SONG ERROR: ", err); }

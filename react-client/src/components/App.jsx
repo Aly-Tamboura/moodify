@@ -57,7 +57,7 @@ class App extends React.Component {
     this.loadPastSearchResults = this.loadPastSearchResults.bind(this);
     this.newReleaseClick = this.newReleaseClick.bind(this);
     this.closePlayer = this.closePlayer.bind(this);
-    this.recentlyPlayedSongs = this.recentlyPlayedSongs.bind(this);
+    this.sendLyrics = this.sendLyrics.bind(this);
   }
 
 
@@ -69,6 +69,7 @@ class App extends React.Component {
       this.setState({
         spotifyHomePage: res.data
       });
+      this.sendLyrics()
     })
   }
 

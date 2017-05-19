@@ -47,7 +47,7 @@ class App extends React.Component {
       spotifyHomePage: [],
       showSpotifyPlayer: false,
       spotifyPlayerUri: '',
-      watson2: {},
+      watson2: null,
       allNewReleases: ['New Releases', 'All Tracks']
 
     };
@@ -373,13 +373,25 @@ class App extends React.Component {
                   runUpDown={this.upDownUser}
                   process={this.process}//why?
                   searchResultsLoading={this.state.searchResultsLoadingUser}
+<<<<<<< HEAD
                   loadPastSearchResults={this.loadPastSearchResults}
                   playlist={this.loginSpotify.bind(this)}/>
+=======
+                  loadPastSearchResults={this.loadPastSearchResults}/>
+>>>>>>> allow topten data to be saved and retreived from data base
               {this.state.showMood ? <Mood watson={this.state.watson} songNameAndArtist={this.state.currentSongNameAndArtist}/>
               : null}
 
               {/* add component for top 10 mood here*/}
-              {!this.state.showLyrics && !this.state.showResults && !this.showPlayer ?
+              {this.state.watson2 === null ?
+                <div>
+                  <h5>Getting Mood for all New Releases</h5>
+                  <div className="loading">
+                    <img alt="loading" src="./img/triangle.svg"/>
+                  </div>
+                </div>
+                 : null }
+              {!this.state.showLyrics && !this.state.showResults && !this.showPlayer && this.state.watson2 !== null ?
                 <div className='test'>
                   <Mood watson={this.state.watson2} songNameAndArtist={this.state.allNewReleases}/>
                 </div>

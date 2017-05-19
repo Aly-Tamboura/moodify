@@ -100,23 +100,23 @@ app.get('/auth/spotify/callback',
 
 app.get('/recentlyplayed', (req, res) => {
   let url = `https://api.spotify.com/v1/me/player/recently-played`
-  
+
   axios(url, { 'headers': { 'Authorization': `Bearer ${accessTime}` } })
-  .then((res) => {  
+  .then((res) => {
 
     let playListEntry = res.data.items;
     let songArray = {track_list: []};
-    
+
     playListEntry.forEach((x) => {
       let songData = {
-        track: { 
+        track: {
           track_name: x.track.name,
           artist_name: x.track.album.artists[0].name,
         }
       };
 
       if( songArray.track_list.length < 10){
-        songArray.track_list.push(songData); 
+        songArray.track_list.push(songData);
       }
     })
     return songArray
@@ -192,6 +192,14 @@ app.get('/logout', (req, res) => {
           })
        res.send(data.body.albums.items);
      });
+      }
+      else{
+        db.TopTenSongs.find({}).sort({dateadded:-1}).limit(1)
+        .exec((err, lastTopTenSongData) => {
+          console.log(lastTopTenSongData);
+          res.send(lastTopTenSongData[0].songs)
+        })
+      }
 
      }, function(err) {
        console.log("could not get new releases", err);
@@ -328,7 +336,7 @@ app.post('/processBook', (req, res) => {
     // const newEntry = new db.Watson(watsonData);
     //   newEntry.save(err => {
     //   if (err) { console.log('SAVE WATSON ERROR'); }
-    // }) 
+    // })
   })
   .then(() => {
     let bookEntry = new db.Book(input);
@@ -429,11 +437,11 @@ app.get('/pastSearches', (req, res) => {
       resolve(songs.concat(books));
     })//
   })//
-  
+
 
   .then( (searches) => {
     let previousSearches = [];
-    
+
 
             return new Promise ((resolve, reject) => {
               if (searches.length > 0) {//

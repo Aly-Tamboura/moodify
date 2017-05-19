@@ -46,7 +46,10 @@ class App extends React.Component {
       landingPageComponents: false,
       spotifyHomePage: [],
       showSpotifyPlayer: false,
-      spotifyPlayerUri: ''
+      spotifyPlayerUri: '',
+      watson2: {},
+      allNewReleases: ['New Releases', 'All Tracks']
+
     };
     this.search = this.search.bind(this);
     this.process = this.process.bind(this);
@@ -91,7 +94,7 @@ class App extends React.Component {
       //   this.setState({ searchResults: res.data, searchResultsLoading: false });
       // }
 
-      //this is working right now, but can't test song search to make sure so I'm leaving 
+      //this is working right now, but can't test song search to make sure so I'm leaving
       //the commented code above available. If this doesn't work, friday morning, ask john
       let results = res.data.items ? res.data.items : res.data;
       console.log('from search: ')
@@ -241,15 +244,24 @@ class App extends React.Component {
       if (!res.data) {
         console.log('error');
       }
-  
+
       this.setState({searchResultsLoading: false});
       return res.data.track_list[0];
+  sendLyrics() {
+    let input = {
+      data: this.state.spotifyHomePage
+    }
+    axios.post('/sendlyrics', input)
+    .then(res => {
+      this.setState({
+        watson2: res.data
+      })
     })
     .then(data =>  {
       console.log(data.track)
       this.process(data.track);
     });
-    
+
 
   }
 
@@ -261,7 +273,7 @@ class App extends React.Component {
           searchResults: res.data,
           showResults: true,
           recentlyPlayed: true
-        })       
+        })
       })
       .catch( (err) => {
         console.log(err);
@@ -282,7 +294,7 @@ class App extends React.Component {
       if (!res.data) {
         console.log('error');
       }
-  
+
       this.setState({searchResultsLoading: false});
       return res.data.track_list[0];
     })
@@ -290,7 +302,7 @@ class App extends React.Component {
       console.log(data.track)
       this.process(data.track);
     });
-    
+
 
   }
 
@@ -318,15 +330,15 @@ class App extends React.Component {
         <div className="container">
           <div className="col1">
             <Search search={this.search}
-                    prev={this.showResults} 
-                    showPrev={this.state.showPrev} 
-                    upDown={this.state.upDown} 
-                    runUpDown={this.upDown}/> 
+                    prev={this.showResults}
+                    showPrev={this.state.showPrev}
+                    upDown={this.state.upDown}
+                    runUpDown={this.upDown}/>
               {this.state.showResults ?
-              <SearchResults results={this.state.searchResults} 
-                            recent={this.state.recentlyPlayed} 
-                            recentlyPlayedSongs={this.recentlyPlayedSongs} 
-                            search={this.search} 
+              <SearchResults results={this.state.searchResults}
+                            recent={this.state.recentlyPlayed}
+                            recentlyPlayedSongs={this.recentlyPlayedSongs}
+                            search={this.search}
                             process={this.process}
                             searchResultsLoading={this.state.searchResultsLoading}
                              />
@@ -362,14 +374,14 @@ class App extends React.Component {
                   process={this.process}//why?
                   searchResultsLoading={this.state.searchResultsLoadingUser}
                   loadPastSearchResults={this.loadPastSearchResults}
-                  playlist={this.loginSpotify.bind(this)}/> 
+                  playlist={this.loginSpotify.bind(this)}/>
               {this.state.showMood ? <Mood watson={this.state.watson} songNameAndArtist={this.state.currentSongNameAndArtist}/>
               : null}
-              
+
               {/* add component for top 10 mood here*/}
               {!this.state.showLyrics && !this.state.showResults && !this.showPlayer ?
                 <div className='test'>
-                  show top ten mood component.
+                  <Mood watson={this.state.watson2} songNameAndArtist={this.state.allNewReleases}/>
                 </div>
               : null}
 

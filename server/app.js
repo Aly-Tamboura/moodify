@@ -284,7 +284,6 @@ app.post('/sendlyrics', (req, res) => {
 })
 
 app.post('/search', (req, res) => {
-  console.log('fucking aly exceeded the limit!');
   return mmHelpers.searchByTitleAndArtist(req.body.title, req.body.artist)
   .then(data => {
     if (data.track_list.length === 0) { res.send({errorMessage: 'No Search Results'}); }
@@ -330,6 +329,7 @@ app.post('/processBook', (req, res) => {
     //   newEntry.save(err => {
     //   if (err) { console.log('SAVE WATSON ERROR'); }
     // })
+
   })
   .then(() => {
     let bookEntry = new db.Book(input);
@@ -434,6 +434,7 @@ app.get('/pastSearches', (req, res) => {
 
   .then( (searches) => {
     let previousSearches = [];
+<<<<<<< HEAD
 
 
             return new Promise ((resolve, reject) => {
@@ -480,6 +481,49 @@ app.get('/pastSearches', (req, res) => {
 })
 
 })
+=======
+    return new Promise ((resolve, reject) => {
+      if (searches.length > 0) {
+        searches.forEach((ID, index) => {
+          if (typeof ID === 'number') {
+            db.Song.where({ track_id: ID }).findOne((err, songData) => {
+              if (err) { reject(err); }
+              previousSearches.push({
+                track_id: ID,
+                track_name: songData.track_name,
+                artist_name: songData.artist_name
+            });
+              if (index === searches.length - 1) {
+                resolve(previousSearches);
+              }
+            });
+          } else {
+            db.Book.where({ book_id: ID }).findOne((err, bookData) => {
+              if (err) { reject(err); }
+              previousSearches.push({
+                book_id: ID,
+                book_name: bookData.book_name,
+                author_name: bookData.author_name
+              });
+              if (index === searches.length - 1) {
+                resolve(previousSearches);
+              }
+            });
+          }
+        });
+      } else {
+        throw err;
+      }
+
+  })
+  .then((previous) => {
+    res.send(previous);
+  })
+  .catch(err => {
+    res.send({errorMessage: 'No Past Searches'});
+  })
+});
+>>>>>>> removed console
 
 app.post('/loadPastSearchResults', (req, res) => {
   return new Promise((resolve, reject) => {
@@ -501,5 +545,11 @@ app.post('/loadPastSearchResults', (req, res) => {
   })
   .catch(err => { res.send(err); })
 });
+<<<<<<< HEAD
 
 module.exports = app;
+=======
+})
+module.exports = app;
+
+>>>>>>> removed console

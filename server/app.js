@@ -23,7 +23,6 @@ const spotifyHelpers = require('./spotifyHelpers.js');
 const watsonHelpers = require('./watsonHelpers.js');
 const db = require('../database');
 const config = require('../config/index.js');
-const googleBookHelpers = require('./googleBookHelpers.js')
 const MM_API_KEY = config.MM_API_KEY;
 
 
@@ -46,7 +45,7 @@ passport.use(new SpotifyStrategy({
   callbackURL: config.SPOTIFY.cbURL
   },
   function(accessToken, refreshToken, profile, done) {
-
+    console.log('Profile from spotify: ', profile);
     accessTime = accessToken;
 
     db.User.findOrCreate({
@@ -84,55 +83,22 @@ let sess = {};
 app.get('/auth/spotify',
   passport.authenticate('spotify', {scope: ['user-read-email', 'user-read-recently-played', 'user-top-read'], showDialog: true}),
   (req, res) => {
-    console.log('This should not be called');
+    console.log('You fucked up, this should not be called');
   });
 
 app.get('/auth/spotify/callback',
   passport.authenticate('spotify', { failureRedirect: '/login' }),
   (req, res) => {
-
+    console.log('spotify callback');
     res.redirect('/');
   });
 
 
 app.get('/recentlyplayed', (req, res) => {
+
+
   let url = `https://api.spotify.com/v1/me/player/recently-played`
 
-  axios(url, { 'headers': { 'Authorization': `Bearer ${accessTime}` } })
-<<<<<<< HEAD
-  .then((res) => {
-
-=======
-  .then( (res) => {
->>>>>>> saved johns changes
-    let playListEntry = res.data.items;
-    let songArray = {track_list: []};
-
-    playListEntry.forEach((x) => {
-      let songData = {
-        track: {
-          track_name: x.track.name,
-          artist_name: x.track.album.artists[0].name,
-        }
-      };
-<<<<<<< HEAD
-
-=======
->>>>>>> saved johns changes
-      if( songArray.track_list.length < 10){
-        songArray.track_list.push(songData);
-      }
-    })
-    return songArray
-<<<<<<< HEAD
-  })
-  .then(data => {
-    // console.log(data.track_list[0])
-    res.send(data)
-  })
-  .catch((err) => {
-    console.log('error retrieving playlists TRACKS from spotify ', err);
-    res.send(err);
   axios(url, { 'headers': { 'Authorization': `Bearer ${accesTime}` } })
     .then((res) => {
         console.log('First thing that happens!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
@@ -140,17 +106,10 @@ app.get('/recentlyplayed', (req, res) => {
       })
     .catch((err) => {
         console.log('error retrieving playlists TRACKS from spotify ', err);
-=======
->>>>>>> saved johns changes
   })
-  .then( data => {
-    res.send(data)
-  })
-  .catch( (err) => {
-    console.log('error retrieving playlists TRACKS from spotify ', err);
-    res.send(err);
-  });
-});
+
+})
+
 
 
 var spotifyApi = new SpotifyWebApi({clientId: config.SPOTIFY_CLIENT_API_KEY, clientSecret: config.SPOTIFY_CLIENT_SECRET_API_KEY});
@@ -196,9 +155,20 @@ app.get('/logout', (req, res) => {
 //Compare most recent data to today's date
 //if day does not much, query the database
 
-
  app.get('/newreleases', (req,res) => {
-<<<<<<< HEAD
+  var isSameDay = true;
+  var lastDate = db.TopTenSongs.find({}).sort({dateadded:-1}).limit(1)
+    .exec((err, lastTopTenSongData) => {
+      var dateValue = lastTopTenSongData[0].dateadded.toString();
+      var date = new Date(dateValue);
+      var dateDay = date.getDay();
+      var now = new Date()
+      var today = now.getDay();
+      if (dateDay !== today){
+        isSameDay = false;
+      }
+      });
+    if(!isSameDay){
     spotifyApi.getNewReleases({ limit : 20, offset: 0, country: 'US' })
       .then(data => {
         topTenData = {
@@ -222,35 +192,10 @@ app.get('/logout', (req, res) => {
       }
      }, function(err) {
        console.log("could not get new releases", err);
-=======
-  spotifyApi.getNewReleases({ limit : 20, offset: 0, country: 'US' })
-    .then(data => {
-      topTenData = {
-        songs: data.body.albums.items,
-        dateadded: Date.now()
-      };
-    const newTopTenEntry = new db.TopTenSongs(topTenData);
-    newTopTenEntry.save(err => {
-      if (err) {console.log('Error saving TopTenSong data')}
-    })
-    res.send(data.body.albums.items);
->>>>>>> saved johns changes
    });
-  }, function(err) {
-    console.log("could not get new releases", err);
-});
-
-app.post('/books', (req,res) => {
-  return googleBookHelpers.getBookDescriptionByTitleAndAuthor(req.body.title, req.body.artist)
-  .then(data => {
-    if (data.length === 0) {res.send({errorMessage: 'No Search Results'}); }
-    res.send(data);
-  })
-  .catch(error => {res.send(error);});
-});
-
 
 var rp = require('request-promise')
+
 app.post('/sendlyrics', (req, res) => {
 
   let lyrics = [];
@@ -278,7 +223,7 @@ app.post('/sendlyrics', (req, res) => {
   //     if(counter === 19) {
   //       clearInterval(getData)
   //       var allLyrics = [].concat.apply([], lyrics);
-  //       return watsonHelpers.queryWatsonToneHelper(allLyrics)
+  //       return watsonHelpers.queryWatsonToneHelper(sample)
   //         .then(data => {
   //           watsonData = {
   //             track_id: 0,
@@ -296,25 +241,39 @@ app.post('/sendlyrics', (req, res) => {
   //             agreeableness: data.agreeableness,
   //             emotionalrange: data.emotionalrange
   //           };
-  //             const newEntry = new db.WatsonTopTen(watsonData);
-  //             newEntry.save(err => {
-  //             if (err) { console.log('SAVE WATSON ERROR');}
-  //             })
-  //             .then(() => {
-  //               console.log('saved watsonTopTen data')
-  //             })
-  //           //res.send(watsonData);
+  //           res.send(watsonData);
   //         })
   //     }
   // }, 1000, res, req, counter)
-  db.WatsonTopTen.find({}).limit(1)
-  .exec((err, WatsonTopTen) => {
-    res.send(WatsonTopTen[0])
+
+
+  var sample = "Spotify Singles -Sting Spotify Singles -Clean BanditSomethin Tells Me -Bryson Tiller Rollin -Calvin Harris Bloom -Machine Gun Kelly Welcome Home -Zac Brown BandMalibu -Miley Cyrus All Becomes Okay -Shallou Mis Planes Son Amarte -JuanesFool's Errand -Fleet Foxes Losing Sleep -Chris Young The System Only Dreams In Total Darkness -The National Missing Link -Nick Murphy Dreamer -Tommy Trash Right Now -HAIM Whatever It Takes -Imagine DragonsDrama -Indiana Massara"
+
+   return watsonHelpers.queryWatsonToneHelper(sample)
+  .then(data => {
+    watsonData = {
+      track_id: 0,
+      anger: data.anger,
+      disgust: data.disgust,
+      fear: data.fear,
+      joy: data.joy,
+      sadness: data.sadness,
+      analytical: data.analytical,
+      confident: data.confident,
+      tentative: data.tentative,
+      openness: data.openness,
+      conscientiousness: data.conscientiousness,
+      extraversion: data.extraversion,
+      agreeableness: data.agreeableness,
+      emotionalrange: data.emotionalrange
+    };
+    res.send(watsonData);
   })
 
 })
 
 app.post('/search', (req, res) => {
+  console.log('fucking aly exceeded the limit!');
   return mmHelpers.searchByTitleAndArtist(req.body.title, req.body.artist)
   .then(data => {
     if (data.track_list.length === 0) { res.send({errorMessage: 'No Search Results'}); }
@@ -332,74 +291,21 @@ app.post('/fetchLyricsByTrackId', (req, res) => {
   .catch(error => { res.send(error); });
 });
 
-app.post('/processBook', (req, res) => {
-  let input = req.body;
-
-  const bookTitleAndAuthor = [input.author_name, input.book_name];
-  let watsonData = {};
-
-  return watsonHelpers.queryWatsonToneHelper(input.description)
-  .then(data => {
-    watsonData.book_id = input.book_id;
-    watsonData.anger = data.anger;
-    watsonData.disgust = data.disgust;
-    watsonData.fear = data.fear;
-    watsonData.joy = data.joy;
-    watsonData.sadness = data.sadness;
-    watsonData.analytical = data.analytical;
-    watsonData.confident = data.confident;
-    watsonData.tentative = data.tentative;
-    watsonData.openness = data.openness;
-    watsonData.conscientiousness = data.conscientiousness;
-    watsonData.extraversion = data.extraversion;
-    watsonData.agreeableness = data.agreeableness;
-    watsonData.emotionalrange = data.emotionalrange
-
-    //this can be readded at some point
-    // const newEntry = new db.Watson(watsonData);
-    //   newEntry.save(err => {
-    //   if (err) { console.log('SAVE WATSON ERROR'); }
-    // })
-
-  })
-  .then(() => {
-    let bookEntry = new db.Book(input);
-    bookEntry.save(err => {
-      if (err) { console.log("SAVE BOOK ERROR: ", err); }
-    })
-  })
-  .then(() => {
-    if (req.session.passport) {
-      return db.User.where({username: req.session.passport.user.username}).update({ $push: {books: input.book_id}});
-    }
-  })
-  .then(() => {
-    res.json([bookTitleAndAuthor, input.description, watsonData, input.img]);
-  })
-  .catch((err) => {
-    console.log('Error processbook: ', err);
-  })
-})
-
 app.post('/process', (req, res) => {
   let input = req.body;
-
   const songNameAndArtist = [input.artist_name, input.track_name];
-
-  console.log(songNameAndArtist);
-
   let watsonData = {};
+
   return mmHelpers.getLyricsByTrackId(input.track_id)
   .then(data => {
     const lyrics = data.lyrics.lyrics_body;
+
     input.lyrics = lyrics.slice(0, (lyrics.indexOf('*******')));
     return;
   })
-
   .then(() => {
     //NEEDS TO BE DATA FROM LYRIC API CALL
-
-    // input.lyrics = 'I hate!\nI hate!\nI hate!\nI hate!\n'
+    input.lyrics = 'I hate!\nI hate!\nI hate!\nI hate!\n'
     return watsonHelpers.queryWatsonToneHelper(input.lyrics)
   })
   .then(data => {
@@ -424,170 +330,67 @@ app.post('/process', (req, res) => {
       if (err) { console.log('SAVE WATSON ERROR'); }
     })
   })
-  .then( () => {
+  .then(() => {
     if (req.session.passport.user.username) {
       return db.User.where({username: req.session.passport.user.username}).update({ $push: {songs: input.track_id}});
     }
   })
-  .then( () => {
+  .then(() => {
     return spotifyHelpers.getSongByTitleAndArtist(input.track_name, input.artist_name)
   })
-  .then( (spotifyData) => {
+  .then((spotifyData) => {
     input.spotify_uri = spotifyData
 
-    let songEntry = new db.Song(input);
+    const songEntry = new db.Song(input);
     songEntry.save(err => {
       if (err) { console.log("SAVE SONG ERROR: ", err); }
     })
   })
-  .then( () => {
+  .then(() => {
     res.json([songNameAndArtist, input.lyrics, watsonData, input.spotify_uri]);
   })
-  .catch( (error) => {
+  .catch((error) => {
     console.log('/PROCESS ERROR: ', error);
     res.send(error);
   });
 })
 
-
 app.get('/pastSearches', (req, res) => {
   /***************************************************************************************/
-  const username = req.session.user || req.session.passport.user.username;
-  return new Promise ( (resolve, reject) => {
+  /***************************************************************************************/
+  const username = req.session.username || req.session.passport.user.username;
+  return new Promise ((resolve, reject) => {
     db.User.where({ username: username }).findOne((err, user) => {
-      if (err) { reject(err); }//
-      let songs = user !== null ? user.songs : [];
-      let books = user !== null ? user.books : [];
-      resolve(songs.concat(books));
-<<<<<<< HEAD
-    })//
-  })//
-
-
-  .then( (searches) => {
-    let previousSearches = [];
-<<<<<<< HEAD
-
-
-            return new Promise ((resolve, reject) => {
-              if (searches.length > 0) {//
-                searches.forEach((ID, index) => {//
-                  if (typeof ID === 'number') {//
-                    db.Song.where({ track_id: ID }).findOne( (err, songData) => {//
-                      if (err) { reject(err); }//
-                      previousSearches.push({//
-                        track_id: ID,
-                        track_name: songData.track_name,
-                        artist_name: songData.artist_name
-                      });//
-                      if (index === searches.length - 1) { //
-                        resolve(previousSearches);
-                      }//
-                    });//
-                  } else {//
-                    db.Book.where({ book_id: ID }).findOne( (err, bookData) => {//
-                      if (err) { reject(err); }//
-                      previousSearches.push({//
-                        book_id: ID,
-                        book_name: bookData.book_name,
-                        author_name: bookData.author_name
-                      });//
-                      if (index === searches.length - 1) {//
-                        resolve(previousSearches);
-                      }//
-                    });//
-                  }//
-                });//
-              } else {//
-                throw err;
-              }//
-          })//
-
-          .then( (previous) => {//
-            res.send(previous);
-          })//
-          .catch( (err) => {//
-            res.send({errorMessage: 'No Past Searches'});
-          })//
-
-})
-
-})
-=======
+      if (err) { reject(err); }
+      console.log('no error: ', user);
+      const songs = user !== null ? user.songs : [];
+      resolve(songs);
+    })
+  })
+  .then(songs => {
+    if (songs.length === 0) { res.send({errorMessage: 'No Past Searches'}); }
     return new Promise ((resolve, reject) => {
-      if (searches.length > 0) {
-        searches.forEach((ID, index) => {
-          if (typeof ID === 'number') {
-            db.Song.where({ track_id: ID }).findOne((err, songData) => {
-              if (err) { reject(err); }
-              previousSearches.push({
-                track_id: ID,
-                track_name: songData.track_name,
-                artist_name: songData.artist_name
-            });
-              if (index === searches.length - 1) {
-                resolve(previousSearches);
-              }
-            });
-          } else {
-            db.Book.where({ book_id: ID }).findOne((err, bookData) => {
-              if (err) { reject(err); }
-              previousSearches.push({
-                book_id: ID,
-                book_name: bookData.book_name,
-                author_name: bookData.author_name
-=======
-    })
-  })
-
-  .then( (searches) => {
-    let previousSearches = [];
-      return new Promise ((resolve, reject) => {
-        if (searches.length > 0) {
-          searches.forEach((ID, index) => {
-            if (typeof ID === 'number') {
-              db.Song.where({ track_id: ID }).findOne( (err, songData) => {
-                if (err) { reject(err); }
-                previousSearches.push({
-                  track_id: ID,
-                  track_name: songData.track_name,
-                  artist_name: songData.artist_name
-                });
-                if (index === searches.length - 1) {
-                  resolve(previousSearches);
-                }
->>>>>>> saved johns changes
-              });
-            } else {
-              db.Book.where({ book_id: ID }).findOne( (err, bookData) => {
-                if (err) { reject(err); }
-                previousSearches.push({
-                  book_id: ID,
-                  book_name: bookData.book_name,
-                  author_name: bookData.author_name
-                });
-                if (index === searches.length - 1) {
-                  resolve(previousSearches);
-                }
-              });
-            }
+      songArray = []
+      songs.forEach((songId, index) => {
+        db.Song.where({ track_id: songId }).findOne((err, songData) => {
+          if (err) { reject(err); }
+          songArray.push({
+            track_id: songId,
+            track_name: songData.track_name,
+            artist_name: songData.artist_name
           });
-        } else {
-          throw err;
-        }
+          if (index === songs.length - 1) { resolve(songArray); }
+        });
+      });
     })
-    .then( (previous) => {
-      res.send(previous);
-    })
-    .catch( (err) => {
-      res.send({errorMessage: 'No Past Searches'});
-    });
   })
-  .catch( (err) => {
-    res.send( {errorMessage: 'No Past Searches'} );
+  .then((songArray) => {
+    res.send(songArray);
+  })
+  .catch(err => {
+    res.send({errorMessage: 'No Past Searches'});
   })
 });
->>>>>>> removed console
 
 app.post('/loadPastSearchResults', (req, res) => {
   return new Promise((resolve, reject) => {
@@ -609,14 +412,5 @@ app.post('/loadPastSearchResults', (req, res) => {
   })
   .catch(err => { res.send(err); })
 });
-<<<<<<< HEAD
-<<<<<<< HEAD
 
 module.exports = app;
-=======
-})
-=======
->>>>>>> saved johns changes
-module.exports = app;
-
->>>>>>> removed console

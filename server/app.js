@@ -99,8 +99,12 @@ app.get('/recentlyplayed', (req, res) => {
   let url = `https://api.spotify.com/v1/me/player/recently-played`
 
   axios(url, { 'headers': { 'Authorization': `Bearer ${accessTime}` } })
+<<<<<<< HEAD
   .then((res) => {
 
+=======
+  .then( (res) => {
+>>>>>>> saved johns changes
     let playListEntry = res.data.items;
     let songArray = {track_list: []};
 
@@ -111,12 +115,16 @@ app.get('/recentlyplayed', (req, res) => {
           artist_name: x.track.album.artists[0].name,
         }
       };
+<<<<<<< HEAD
 
+=======
+>>>>>>> saved johns changes
       if( songArray.track_list.length < 10){
         songArray.track_list.push(songData);
       }
     })
     return songArray
+<<<<<<< HEAD
   })
   .then(data => {
     // console.log(data.track_list[0])
@@ -132,10 +140,17 @@ app.get('/recentlyplayed', (req, res) => {
       })
     .catch((err) => {
         console.log('error retrieving playlists TRACKS from spotify ', err);
+=======
+>>>>>>> saved johns changes
   })
-
-})
-
+  .then( data => {
+    res.send(data)
+  })
+  .catch( (err) => {
+    console.log('error retrieving playlists TRACKS from spotify ', err);
+    res.send(err);
+  });
+});
 
 
 var spotifyApi = new SpotifyWebApi({clientId: config.SPOTIFY_CLIENT_API_KEY, clientSecret: config.SPOTIFY_CLIENT_SECRET_API_KEY});
@@ -183,6 +198,7 @@ app.get('/logout', (req, res) => {
 
 
  app.get('/newreleases', (req,res) => {
+<<<<<<< HEAD
     spotifyApi.getNewReleases({ limit : 20, offset: 0, country: 'US' })
       .then(data => {
         topTenData = {
@@ -206,7 +222,23 @@ app.get('/logout', (req, res) => {
       }
      }, function(err) {
        console.log("could not get new releases", err);
+=======
+  spotifyApi.getNewReleases({ limit : 20, offset: 0, country: 'US' })
+    .then(data => {
+      topTenData = {
+        songs: data.body.albums.items,
+        dateadded: Date.now()
+      };
+    const newTopTenEntry = new db.TopTenSongs(topTenData);
+    newTopTenEntry.save(err => {
+      if (err) {console.log('Error saving TopTenSong data')}
+    })
+    res.send(data.body.albums.items);
+>>>>>>> saved johns changes
    });
+  }, function(err) {
+    console.log("could not get new releases", err);
+});
 
 app.post('/books', (req,res) => {
   return googleBookHelpers.getBookDescriptionByTitleAndAuthor(req.body.title, req.body.artist)
@@ -219,7 +251,6 @@ app.post('/books', (req,res) => {
 
 
 var rp = require('request-promise')
-
 app.post('/sendlyrics', (req, res) => {
 
   let lyrics = [];
@@ -356,17 +387,18 @@ app.post('/process', (req, res) => {
   const songNameAndArtist = [input.artist_name, input.track_name];
 
   console.log(songNameAndArtist);
-  let watsonData = {};
 
+  let watsonData = {};
   return mmHelpers.getLyricsByTrackId(input.track_id)
   .then(data => {
     const lyrics = data.lyrics.lyrics_body;
-
     input.lyrics = lyrics.slice(0, (lyrics.indexOf('*******')));
     return;
   })
+
   .then(() => {
     //NEEDS TO BE DATA FROM LYRIC API CALL
+
     // input.lyrics = 'I hate!\nI hate!\nI hate!\nI hate!\n'
     return watsonHelpers.queryWatsonToneHelper(input.lyrics)
   })
@@ -392,15 +424,15 @@ app.post('/process', (req, res) => {
       if (err) { console.log('SAVE WATSON ERROR'); }
     })
   })
-  .then(() => {
+  .then( () => {
     if (req.session.passport.user.username) {
       return db.User.where({username: req.session.passport.user.username}).update({ $push: {songs: input.track_id}});
     }
   })
-  .then(() => {
+  .then( () => {
     return spotifyHelpers.getSongByTitleAndArtist(input.track_name, input.artist_name)
   })
-  .then((spotifyData) => {
+  .then( (spotifyData) => {
     input.spotify_uri = spotifyData
 
     let songEntry = new db.Song(input);
@@ -408,10 +440,10 @@ app.post('/process', (req, res) => {
       if (err) { console.log("SAVE SONG ERROR: ", err); }
     })
   })
-  .then(() => {
+  .then( () => {
     res.json([songNameAndArtist, input.lyrics, watsonData, input.spotify_uri]);
   })
-  .catch((error) => {
+  .catch( (error) => {
     console.log('/PROCESS ERROR: ', error);
     res.send(error);
   });
@@ -420,7 +452,6 @@ app.post('/process', (req, res) => {
 
 app.get('/pastSearches', (req, res) => {
   /***************************************************************************************/
-  /***************************************************************************************/
   const username = req.session.user || req.session.passport.user.username;
   return new Promise ( (resolve, reject) => {
     db.User.where({ username: username }).findOne((err, user) => {
@@ -428,6 +459,7 @@ app.get('/pastSearches', (req, res) => {
       let songs = user !== null ? user.songs : [];
       let books = user !== null ? user.books : [];
       resolve(songs.concat(books));
+<<<<<<< HEAD
     })//
   })//
 
@@ -504,23 +536,55 @@ app.get('/pastSearches', (req, res) => {
                 book_id: ID,
                 book_name: bookData.book_name,
                 author_name: bookData.author_name
-              });
-              if (index === searches.length - 1) {
-                resolve(previousSearches);
-              }
-            });
-          }
-        });
-      } else {
-        throw err;
-      }
+=======
+    })
+  })
 
+  .then( (searches) => {
+    let previousSearches = [];
+      return new Promise ((resolve, reject) => {
+        if (searches.length > 0) {
+          searches.forEach((ID, index) => {
+            if (typeof ID === 'number') {
+              db.Song.where({ track_id: ID }).findOne( (err, songData) => {
+                if (err) { reject(err); }
+                previousSearches.push({
+                  track_id: ID,
+                  track_name: songData.track_name,
+                  artist_name: songData.artist_name
+                });
+                if (index === searches.length - 1) {
+                  resolve(previousSearches);
+                }
+>>>>>>> saved johns changes
+              });
+            } else {
+              db.Book.where({ book_id: ID }).findOne( (err, bookData) => {
+                if (err) { reject(err); }
+                previousSearches.push({
+                  book_id: ID,
+                  book_name: bookData.book_name,
+                  author_name: bookData.author_name
+                });
+                if (index === searches.length - 1) {
+                  resolve(previousSearches);
+                }
+              });
+            }
+          });
+        } else {
+          throw err;
+        }
+    })
+    .then( (previous) => {
+      res.send(previous);
+    })
+    .catch( (err) => {
+      res.send({errorMessage: 'No Past Searches'});
+    });
   })
-  .then((previous) => {
-    res.send(previous);
-  })
-  .catch(err => {
-    res.send({errorMessage: 'No Past Searches'});
+  .catch( (err) => {
+    res.send( {errorMessage: 'No Past Searches'} );
   })
 });
 >>>>>>> removed console
@@ -546,10 +610,13 @@ app.post('/loadPastSearchResults', (req, res) => {
   .catch(err => { res.send(err); })
 });
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 module.exports = app;
 =======
 })
+=======
+>>>>>>> saved johns changes
 module.exports = app;
 
 >>>>>>> removed console

@@ -47,6 +47,7 @@ class App extends React.Component {
       spotifyHomePage: [],
       showSpotifyPlayer: false,
       spotifyPlayerUri: '',
+      showImage: false,
       watson2: null,
       allNewReleases: ['New Releases', 'All Tracks']
 
@@ -66,6 +67,7 @@ class App extends React.Component {
 
   componentDidMount(){
     axios.get('/newreleases').then((res) => {
+      //console.log(res.data)
       if (!res.data){
         console.log('Error on initial load of song data');
       }
@@ -238,7 +240,7 @@ class App extends React.Component {
     let options = {
       title: songArtist[0],
       artist: songArtist[1]
-    };
+    }
     axios.post('/search', options)
     .then((res) => {
       if (!res.data) {
@@ -247,8 +249,11 @@ class App extends React.Component {
 
       this.setState({searchResultsLoading: false});
       return res.data.track_list[0];
+    })
+  }
+
   sendLyrics() {
-    let input = {
+    let input= {
       data: this.state.spotifyHomePage
     }
     axios.post('/sendlyrics', input)
@@ -258,11 +263,9 @@ class App extends React.Component {
       })
     })
     .then(data =>  {
-      console.log(data.track)
+      //console.log(data.track)
       this.process(data.track);
     });
-
-
   }
 
   loginSpotify() {
@@ -281,7 +284,7 @@ class App extends React.Component {
   }
 
   recentlyPlayedSongs(songArtist) {
-    console.log("I am getting to recentlyplayed", songArtist)
+    //console.log("I am getting to recentlyplayed", songArtist)
 
     this.setState({searchResultsLoading: true, showPrev: true, upDown: false});
 
@@ -301,9 +304,10 @@ class App extends React.Component {
     .then(data =>  {
       console.log(data.track)
       this.process(data.track);
-    });
-
-
+    })
+    .catch((err) => {
+      console.log(err);
+    })
   }
 
 
@@ -373,12 +377,9 @@ class App extends React.Component {
                   runUpDown={this.upDownUser}
                   process={this.process}//why?
                   searchResultsLoading={this.state.searchResultsLoadingUser}
-<<<<<<< HEAD
+
                   loadPastSearchResults={this.loadPastSearchResults}
                   playlist={this.loginSpotify.bind(this)}/>
-=======
-                  loadPastSearchResults={this.loadPastSearchResults}/>
->>>>>>> allow topten data to be saved and retreived from data base
               {this.state.showMood ? <Mood watson={this.state.watson} songNameAndArtist={this.state.currentSongNameAndArtist}/>
               : null}
 
